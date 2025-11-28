@@ -1,0 +1,34 @@
+{
+  "project_title": "Credit Risk Prediction Model",
+  "subtitle": "Automated Loan Default Assessment System",
+  "date": "November 2025",
+  "author": "Data Science Team - ID/X Partners",
+  "dataset_stats": {
+    "total_loans": "466,285",
+    "period": "2007-2014",
+    "features": 43,
+    "analyzed": "228,046"
+  },
+  "model_performance": {
+    "model_name": "XGBoost (Tuned)",
+    "accuracy": "75.9%",
+    "precision": "37.8%",
+    "recall": "42.2%",
+    "f1_score": "0.399",
+    "roc_auc": "0.712",
+    "threshold": "0.30"
+  },
+  "business_impact": {
+    "loss_reduction": "42.2%",
+    "savings": "$41.1M",
+    "net_revenue": "$-0.7M",
+    "approval_rate": "79%",
+    "default_rate": "13.9%"
+  },
+  "confusion_matrix": {
+    "tn": 30944,
+    "fp": 6004,
+    "fn": 5010,
+    "tp": 3652
+  }
+}

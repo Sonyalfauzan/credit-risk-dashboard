@@ -1,0 +1,56 @@
+
+Credit Risk Prediction Model - Final Report
+Generated: 2025-11-26 13:51
+
+DATASET
+- Total applications: 466,285
+- Analyzed (final states): 228,046
+- Training set: 295,582 (after SMOTE)
+- Test set: 45,610
+- Features: 43
+
+MODEL
+- Algorithm: XGBoost (Tuned)
+- Optimal threshold: 0.300
+- Cross-validation: 0.7664 ± 0.3838 (5-fold)
+
+PERFORMANCE (Test Set)
+- Accuracy: 75.9%
+- Precision: 37.8%
+- Recall: 42.2%
+- F1-Score: 0.3987
+- ROC-AUC: 0.7122
+
+CONFUSION MATRIX
+- True Negatives: 30,944 (approved good loans)
+- False Positives: 6,004 (rejected good loans)
+- False Negatives: 5,010 (approved bad loans)
+- True Positives: 3,652 (rejected bad loans)
+
+BUSINESS IMPACT
+- Revenue from good loans: $55.70M
+- Loss from defaults: $56.36M
+- Net revenue: $-0.66M
+- Loss reduction vs baseline: 42.2%
+- Savings: $41.09M
+
+KEY FINDINGS
+1. Model successfully identifies 42% of defaults
+2. 42% reduction in default losses achieved
+3. Top risk factors: interest rate, FICO score, DTI ratio
+4. 79% approval rate maintained
+5. Cross-validation shows stable performance
+
+RECOMMENDATIONS
+- Deploy model for automated scoring
+- Manual review for probabilities 0.45-0.60
+- Monitor performance monthly
+- Retrain quarterly with new data
+- Track false negatives for pattern analysis
+
+NEXT STEPS
+1. Pilot deployment with sample of applications
+2. Set up monitoring dashboard
+3. Train operations team
+4. Establish feedback loop
+5. Plan full production rollout

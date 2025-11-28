@@ -1,0 +1,49 @@
+
+POWERPOINT CREATION GUIDE
+=========================
+
+FILES CREATED:
+1. presentation_slides_content.txt - Complete slide text content
+2. presentation_data.json - Key metrics in JSON format
+3. slide_model_comparison.png - Model performance chart
+4. slide_business_impact.png - Financial impact chart
+5. slide_confusion_matrix.png - Confusion matrix visualization
+6. slide_feature_importance.png - Top risk factors chart
+7. slide_roc_curve.png - ROC curve
+
+RECOMMENDED POWERPOINT STRUCTURE:
+- Total slides: 15-16
+- Design: Professional business template
+- Colors: Blue/Green for positive, Red for negative, Neutral for data
+- Fonts: Arial or Calibri, sizes 18-24 for body, 28-36 for titles
+
+SLIDE DESIGN TIPS:
+1. Use consistent template throughout
+2. Limit text: 5-7 bullets per slide maximum
+3. Include visuals: Charts, icons, diagrams
+4. Use white space effectively
+5. High-contrast colors for readability
+6. Professional color scheme (avoid bright colors)
+
+TO CREATE POWERPOINT:
+1. Open PowerPoint, select professional template
+2. Copy content from presentation_slides_content.txt
+3. Insert saved charts (.png files) into appropriate slides
+4. Add company logo and branding
+5. Use animations sparingly (fade/appear only)
+6. Add slide numbers
+7. Export as PDF: [Sony Alfauzan]_Credit_Risk_Presentation.pdf
+
+PRESENTATION DELIVERY TIPS:
+- Target time: 15-20 minutes + 5-10 min Q&A
+- Practice transitions between slides
+- Be ready to explain technical concepts simply
+- Have backup slides for deep-dive questions
+- Know your key numbers by heart
+
+Key Numbers to Remember:
+- ROC-AUC: {final_metrics['auc']:.3f}
+- F1-Score: {final_optimized_f1:.3f}
+- Loss Reduction: {improvement_percentage:.0f}%
+- Savings: ${improvement_in_loss/1e6:.1f}M
+- Approval Rate: {(tn+fn)/len(y_test)*100:.0f}%
