@@ -117,16 +117,138 @@ def prepare_features_for_model(df_raw: pd.DataFrame) -> pd.DataFrame:
     return df_scaled
 
 
+def parse_emp_length_to_years(val):
+    """Parse kolom emp_length (string) menjadi numeric years."""
+    if pd.isna(val):
+        return 0.0
+    s = str(val).strip()
+    if s in ["", "n/a"]:
+        return 0.0
+    if s == "10+ years":
+        return 10.0
+    if s == "< 1 year":
+        return 0.5
+    # contoh: "3 years", "1 year"
+    digits = "".join(ch for ch in s if ch.isdigit())
+    try:
+        return float(digits) if digits != "" else 0.0
+    except ValueError:
+        return 0.0
+
+
+def build_features_from_raw_df(df_raw: pd.DataFrame) -> pd.DataFrame:
+    """
+    Membangun DataFrame fitur lengkap (semua kolom di FEATURES)
+    dari data mentah LendingClub (seperti loan_amnt, term, grade, dst.).
+    """
+    # Mulai dengan DataFrame semua 0.0
+    df_feat = pd.DataFrame(0.0, index=df_raw.index, columns=FEATURES, dtype=float)
+
+    # Kolom yang bisa di-copy langsung dari raw
+    cols_direct = [
+        "Unnamed: 0",
+        "loan_amnt",
+        "funded_amnt",
+        "funded_amnt_inv",
+        "int_rate",
+        "installment",
+        "annual_inc",
+        "dti",
+        "delinq_2yrs",
+        "inq_last_6mths",
+        "mths_since_last_delinq",
+        "mths_since_last_record",
+        "open_acc",
+        "pub_rec",
+        "revol_bal",
+        "revol_util",
+        "total_acc",
+        "mths_since_last_major_derog",
+        "tot_coll_amt",
+        "tot_cur_bal",
+        "total_rev_hi_lim",
+        "sub_grade",
+        "purpose",
+        "addr_state",
+    ]
+    for col in cols_direct:
+        if col in df_raw.columns and col in df_feat.columns:
+            df_feat[col] = df_raw[col]
+
+    # Rasio-rasio engineered
+    if {"loan_amnt", "annual_inc"} <= set(df_raw.columns) and "loan_to_income_ratio" in df_feat.columns:
+        inc = df_raw["annual_inc"].replace(0, np.nan)
+        ratio = (df_raw["loan_amnt"] / inc).replace([np.inf, -np.inf], np.nan)
+        df_feat["loan_to_income_ratio"] = ratio.fillna(0).astype(float)
+
+    if {"installment", "annual_inc"} <= set(df_raw.columns) and "installment_to_income_ratio" in df_feat.columns:
+        inc = df_raw["annual_inc"].replace(0, np.nan)
+        ratio2 = (df_raw["installment"] / inc).replace([np.inf, -np.inf], np.nan)
+        df_feat["installment_to_income_ratio"] = ratio2.fillna(0).astype(float)
+
+    if {"revol_bal", "annual_inc"} <= set(df_raw.columns) and "revol_bal_to_income_ratio" in df_feat.columns:
+        inc = df_raw["annual_inc"].replace(0, np.nan)
+        ratio3 = (df_raw["revol_bal"] / inc).replace([np.inf, -np.inf], np.nan)
+        df_feat["revol_bal_to_income_ratio"] = ratio3.fillna(0).astype(float)
+
+    # emp_length_years
+    if "emp_length" in df_raw.columns and "emp_length_years" in df_feat.columns:
+        df_feat["emp_length_years"] = df_raw["emp_length"].map(parse_emp_length_to_years).astype(float)
+
+    # term_months dari 'term'
+    if "term" in df_raw.columns and "term_months" in df_feat.columns:
+        term_numeric = df_raw["term"].astype(str).str.extract(r"(\\d+)")[0].astype(float)
+        df_feat["term_months"] = term_numeric.fillna(36.0)
+
+    # One-hot grade_B..G
+    if "grade" in df_raw.columns:
+        for g in ["B", "C", "D", "E", "F", "G"]:
+            col = f"grade_{g}"
+            if col in df_feat.columns:
+                df_feat[col] = (df_raw["grade"] == g).astype(float)
+
+    # One-hot home_ownership
+    if "home_ownership" in df_raw.columns:
+        for h in ["NONE", "OTHER", "OWN", "RENT", "MORTGAGE"]:
+            col = f"home_ownership_{h}"
+            if col in df_feat.columns:
+                df_feat[col] = (df_raw["home_ownership"] == h).astype(float)
+
+    # verification_status one-hot
+    if "verification_status" in df_raw.columns:
+        vs = df_raw["verification_status"].astype(str)
+        if "verification_status_Source Verified" in df_feat.columns:
+            df_feat["verification_status_Source Verified"] = (vs == "Source Verified").astype(float)
+        if "verification_status_Verified" in df_feat.columns:
+            df_feat["verification_status_Verified"] = (vs == "Verified").astype(float)
+
+    # initial_list_status_w
+    if "initial_list_status" in df_raw.columns and "initial_list_status_w" in df_feat.columns:
+        ils = df_raw["initial_list_status"].astype(str)
+        df_feat["initial_list_status_w"] = (ils == "w").astype(float)
+
+    return df_feat
+
+
 def predict_batch(df_raw: pd.DataFrame, threshold: float) -> pd.DataFrame:
     """
-    df_raw -> DataFrame
-    Return -> df dengan kolom tambahan: prob_default, label, risk_flag
+    Batch prediction untuk berbagai format input:
+    - Jika df_raw sudah berisi semua kolom FEATURES → gunakan langsung.
+    - Jika belum (data mentah LendingClub) → bangun fitur terlebih dahulu.
     """
-    X = prepare_features_for_model(df_raw)
+    has_all_features = all(col in df_raw.columns for col in FEATURES)
+
+    if has_all_features:
+        df_features = df_raw
+    else:
+        df_features = build_features_from_raw_df(df_raw)
+
+    X = prepare_features_for_model(df_features)
     prob_default = model.predict_proba(X)[:, 1]  # asumsi kelas 1 = Bad Loan
 
     labels = (prob_default >= threshold).astype(int)
 
+    # Hasil dikembalikan dengan kolom asli + kolom prediksi
     result = df_raw.copy()
     result["prob_default"] = prob_default
     result["label"] = labels
@@ -135,6 +257,7 @@ def predict_batch(df_raw: pd.DataFrame, threshold: float) -> pd.DataFrame:
     )
 
     return result
+
 
 
 def build_feature_row_from_form(form_inputs: dict) -> pd.DataFrame:
