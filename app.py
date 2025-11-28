@@ -5,31 +5,42 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-# =========================
-# Konfigurasi path artefak
-# =========================
-ARTIFACT_DIR = "model_artifacts"
+# =====================================================
+# 1. KONFIGURASI PATH ARTEFAK (SESUAI STRUKTUR REPO KAMU)
+# =====================================================
+# Semua file artefak (metadata.json, features.pkl, scaler.pkl, credit_risk_model.pkl, dll)
+# saat ini ada di ROOT repo, sejajar dengan app.py.
+# Jadi kita pakai direktori file ini sendiri sebagai base path.
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+ARTIFACT_DIR = BASE_DIR  # kalau nanti mau pakai folder khusus, ganti misal "model_artifacts"
+
 METADATA_PATH = os.path.join(ARTIFACT_DIR, "metadata.json")
 FEATURES_PATH = os.path.join(ARTIFACT_DIR, "features.pkl")
 SCALER_PATH = os.path.join(ARTIFACT_DIR, "scaler.pkl")
-MODEL_PATH = os.path.join(ARTIFACT_DIR, "credit_risk_model.pkl")  # isi dengan model finalmu
+MODEL_PATH = os.path.join(ARTIFACT_DIR, "credit_risk_model.pkl")  # file model final kamu
 
 
-# =========================
-# Load artefak (cached)
-# =========================
+# =====================================================
+# 2. LOAD ARTEFAK MODEL (CACHED)
+# =====================================================
 @st.cache_resource
 def load_artifacts():
+    """Load metadata, daftar fitur, scaler, dan model dari artefak yang sudah disimpan."""
+    missing = []
     if not os.path.exists(METADATA_PATH):
-        raise FileNotFoundError(f"metadata.json tidak ditemukan di {ARTIFACT_DIR}")
+        missing.append("metadata.json")
     if not os.path.exists(FEATURES_PATH):
-        raise FileNotFoundError(f"features.pkl tidak ditemukan di {ARTIFACT_DIR}")
+        missing.append("features.pkl")
     if not os.path.exists(SCALER_PATH):
-        raise FileNotFoundError(f"scaler.pkl tidak ditemukan di {ARTIFACT_DIR}")
+        missing.append("scaler.pkl")
     if not os.path.exists(MODEL_PATH):
+        missing.append("credit_risk_model.pkl")
+
+    if missing:
         raise FileNotFoundError(
-            f"Model tidak ditemukan: {MODEL_PATH}. "
-            "Simpan dulu final model kamu dengan joblib.dump ke path tersebut."
+            "Artefak berikut tidak ditemukan di direktori aplikasi: "
+            + ", ".join(missing)
         )
 
     # metadata.json
@@ -48,20 +59,36 @@ def load_artifacts():
     return metadata, features, scaler, model
 
 
-metadata, FEATURES, scaler, model = load_artifacts()
+# Coba load artefak; kalau gagal, tampilkan pesan error yang jelas
+try:
+    metadata, FEATURES, scaler, model = load_artifacts()
+except FileNotFoundError as e:
+    st.set_page_config(
+        page_title="Credit Risk Prediction – ERROR",
+        page_icon="💳",
+        layout="wide",
+    )
+    st.title("💳 Credit Risk Prediction – Configuration Error")
+    st.error(
+        "Aplikasi tidak dapat menemukan file artefak yang dibutuhkan.\n\n"
+        f"Detail: {e}\n\n"
+        "Pastikan file berikut ada di repo (sejajar dengan app.py):\n"
+        "- metadata.json\n- features.pkl\n- scaler.pkl\n- credit_risk_model.pkl"
+    )
+    st.stop()
 
 
-# =========================
-# Fungsi preprocessing & prediksi
-# =========================
+# =====================================================
+# 3. FUNGSI PREPROCESSING & PREDIKSI
+# =====================================================
 def prepare_features_for_model(df_raw: pd.DataFrame) -> pd.DataFrame:
     """
-    - Pastikan hanya pakai fitur yang model harapkan (urutan = FEATURES)
-    - Scale numeric features dengan scaler yang sama seperti di training
+    - Memastikan hanya memakai fitur yang diharapkan model (urutannya = FEATURES).
+    - Men-scale fitur numerik dengan scaler yang sama seperti saat training.
     """
     df = df_raw.copy()
 
-    # Hanya ambil kolom yang ada di FEATURES (sisa di-drop)
+    # Cek apakah semua kolom yang dibutuhkan model ada di CSV
     missing_cols = [c for c in FEATURES if c not in df.columns]
     if missing_cols:
         raise ValueError(
@@ -69,6 +96,7 @@ def prepare_features_for_model(df_raw: pd.DataFrame) -> pd.DataFrame:
             + ", ".join(missing_cols)
         )
 
+    # Hanya ambil kolom yang digunakan model dan dalam urutan yang tepat
     df = df[FEATURES].copy()
 
     # Deteksi kolom numerik berdasarkan dtype
@@ -76,7 +104,8 @@ def prepare_features_for_model(df_raw: pd.DataFrame) -> pd.DataFrame:
 
     # Scale numeric features
     df_scaled = df.copy()
-    df_scaled[numeric_cols] = scaler.transform(df[numeric_cols])
+    if numeric_cols:
+        df_scaled[numeric_cols] = scaler.transform(df[numeric_cols])
 
     return df_scaled
 
@@ -87,7 +116,8 @@ def predict_batch(df_raw: pd.DataFrame, threshold: float) -> pd.DataFrame:
     Return -> df dengan kolom tambahan: prob_default, label, risk_flag
     """
     X = prepare_features_for_model(df_raw)
-    prob_default = model.predict_proba(X)[:, 1]  # asumsi kelas 1 = Bad Loan
+    # Asumsi kelas 1 = Bad Loan / Default
+    prob_default = model.predict_proba(X)[:, 1]
 
     labels = (prob_default >= threshold).astype(int)
 
@@ -101,9 +131,9 @@ def predict_batch(df_raw: pd.DataFrame, threshold: float) -> pd.DataFrame:
     return result
 
 
-# =========================
-# Konfigurasi halaman
-# =========================
+# =====================================================
+# 4. KONFIGURASI HALAMAN & HEADER
+# =====================================================
 st.set_page_config(
     page_title="Credit Risk Prediction – Lending Company",
     page_icon="💳",
@@ -117,13 +147,11 @@ st.markdown(
 Aplikasi ini menggunakan **model machine learning** untuk memprediksi risiko kredit
 berdasarkan data aplikasi pinjaman.
 
-Model & artefak (metadata, scaler, fitur) diambil dari proses training di notebook.
+Model & artefak (metadata, scaler, fitur, model) diambil dari proses training di notebook.
 """
 )
 
-# =========================
-# Tampilkan ringkasan performa model dari metadata.json
-# =========================
+# Ringkasan performa model dari metadata.json
 metrics = metadata.get("metrics", {})
 optimal_threshold = metadata.get("optimal_threshold", 0.5)
 model_type = metadata.get("model_type", "Unknown Model")
@@ -144,9 +172,10 @@ with c5:
 
 st.markdown("---")
 
-# =========================
-# Sidebar: threshold & info
-# =========================
+
+# =====================================================
+# 5. SIDEBAR: PENGATURAN THRESHOLD
+# =====================================================
 st.sidebar.header("⚙️ Model Settings")
 
 threshold = st.sidebar.slider(
@@ -165,15 +194,16 @@ st.sidebar.markdown("---")
 st.sidebar.write("Jumlah fitur yang digunakan model:", len(FEATURES))
 
 
-# =========================
-# Batch Prediction (Upload CSV)
-# =========================
+# =====================================================
+# 6. BATCH PREDICTION – UPLOAD CSV
+# =====================================================
 st.subheader("📂 Batch Prediction – Upload CSV")
 
 st.markdown(
     """
 Upload file **CSV** dengan struktur kolom yang sama seperti dataset final yang kamu pakai
-saat training model (sebelum split train/test).  
+saat training model (sebelum split train/test, setelah data cleaning & feature engineering).  
+
 Aplikasi akan mengembalikan probabilitas default dan label risiko untuk setiap baris.
 """
 )
@@ -202,12 +232,12 @@ if uploaded_file is not None:
                 use_container_width=True,
             )
 
-            # Ringkas distribusi prediksi
+            # Ringkasan distribusi prediksi
             st.subheader("📌 Ringkasan Prediksi")
             summary = df_result["risk_flag"].value_counts().rename("count")
             st.table(summary.to_frame())
 
-            # Download hasil
+            # Tombol download hasil sebagai CSV
             csv_bytes = df_result.to_csv(index=False).encode("utf-8")
             st.download_button(
                 label="⬇️ Download Hasil Prediksi CSV",
@@ -217,6 +247,9 @@ if uploaded_file is not None:
             )
 
     except Exception as e:
-        st.error(f"Terjadi error saat membaca file / melakukan prediksi:\n\n{e}")
+        st.error(
+            "Terjadi error saat membaca file atau melakukan prediksi.\n\n"
+            f"Detail error:\n{e}"
+        )
 else:
     st.info("Silakan upload file CSV untuk memulai batch prediction.")
