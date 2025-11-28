@@ -137,17 +137,104 @@ def predict_batch(df_raw: pd.DataFrame, threshold: float) -> pd.DataFrame:
     return result
 
 
-def predict_single(input_dict: dict, threshold: float) -> dict:
-    """Helper untuk single applicant dari form Streamlit."""
-    df = pd.DataFrame([input_dict])
-    res_df = predict_batch(df, threshold)
-    row = res_df.iloc[0]
+def build_feature_row_from_form(form_inputs: dict) -> pd.DataFrame:
+    """
+    Bangun satu baris fitur lengkap (semua kolom di FEATURES)
+    dari input form yang lebih sederhana.
+    Kolom-kolom yang tidak diisi user di-set ke 0 sebagai default.
+    """
+    # Inisialisasi semua fitur dengan 0.0 (numerik)
+    row = {feat: 0.0 for feat in FEATURES}
 
+    # Ambil nilai dari form
+    loan_amnt = float(form_inputs.get("loan_amnt", 0.0))
+    term_str = form_inputs.get("term", "36 months")
+    int_rate = float(form_inputs.get("int_rate", 0.0))
+    annual_inc = float(form_inputs.get("annual_inc", 0.0))
+    dti = float(form_inputs.get("dti", 0.0))
+    credit_history_years = float(form_inputs.get("credit_history_years", 0.0))
+    grade = form_inputs.get("grade", "A")
+    home_ownership = form_inputs.get("home_ownership", "RENT")
+    purpose = form_inputs.get("purpose", "debt_consolidation")
+
+    # ----- Fitur dasar pinjaman -----
+    if "loan_amnt" in row:
+        row["loan_amnt"] = loan_amnt
+    if "funded_amnt" in row:
+        row["funded_amnt"] = loan_amnt
+    if "funded_amnt_inv" in row:
+        row["funded_amnt_inv"] = loan_amnt
+
+    if "int_rate" in row:
+        row["int_rate"] = int_rate
+
+    if "annual_inc" in row:
+        row["annual_inc"] = annual_inc
+    if "dti" in row:
+        row["dti"] = dti
+    if "credit_history_years" in row:
+        row["credit_history_years"] = credit_history_years
+
+    # Term → term_months
+    if term_str == "60 months":
+        term_months = 60
+    else:
+        term_months = 36
+    if "term_months" in row:
+        row["term_months"] = float(term_months)
+
+    # Installment (perkiraan kasar)
+    if "installment" in row and term_months > 0:
+        row["installment"] = loan_amnt / term_months
+
+    # ----- Engineered ratios -----
+    if "loan_to_income_ratio" in row and annual_inc > 0:
+        row["loan_to_income_ratio"] = loan_amnt / annual_inc
+    if "installment_to_income_ratio" in row and annual_inc > 0 and row.get("installment", 0) > 0:
+        row["installment_to_income_ratio"] = row["installment"] / annual_inc
+    if "revol_bal_to_income_ratio" in row and annual_inc > 0 and "revol_bal" in row:
+        row["revol_bal_to_income_ratio"] = row.get("revol_bal", 0.0) / annual_inc
+
+    # ----- One-hot grade (grade_B–grade_G) -----
+    grade_map = ["B", "C", "D", "E", "F", "G"]
+    for g in grade_map:
+        col = f"grade_{g}"
+        if col in row:
+            row[col] = 1.0 if grade == g else 0.0
+    # grade A = semua grade_B..G = 0
+
+    # ----- One-hot home_ownership -----
+    home_cols = ["NONE", "OTHER", "OWN", "RENT", "MORTGAGE"]
+    for h in home_cols:
+        col = f"home_ownership_{h}"
+        if col in row:
+            row[col] = 1.0 if home_ownership == h else 0.0
+
+    # ----- Purpose (jika ada kolom 'purpose') -----
+    if "purpose" in row:
+        # Kalau mau, kamu bisa mapping purpose string → kode numerik sesuai training.
+        # Di sini dibiarkan 0 sebagai baseline.
+        pass
+
+    # ----- Kolom lain yang spesifik, set default aman -----
+    if "Unnamed: 0" in row:
+        row["Unnamed: 0"] = 0.0
+
+    return pd.DataFrame([row])
+
+
+def predict_single(form_inputs: dict, threshold: float) -> dict:
+    """Single applicant prediction: bangun baris fitur lengkap dari form, lalu prediksi."""
+    X_raw = build_feature_row_from_form(form_inputs)
+    X = prepare_features_for_model(X_raw)
+    prob_default = float(model.predict_proba(X)[:, 1][0])
+    label = int(prob_default >= threshold)
+    risk_flag = "High Risk (Bad Loan)" if label == 1 else "Low Risk (Good Loan)"
     return {
-        "prob_default": float(row["prob_default"]),
-        "label": int(row["label"]),
-        "risk_flag": row["risk_flag"],
-        "raw_input": input_dict,
+        "prob_default": prob_default,
+        "label": label,
+        "risk_flag": risk_flag,
+        "raw_input": form_inputs,
     }
 
 
@@ -226,8 +313,8 @@ with tab_single:
     st.markdown(
         """
 Form ini hanya contoh template.  
-**Kamu perlu menyesuaikan nama field dan mapping ke fitur** supaya match dengan
-`features.pkl` yang dipakai modelmu.
+**Mapping dari form → fitur model** sudah dibuat di fungsi `build_feature_row_from_form()`.  
+Kalau kamu ubah form, jangan lupa update mapping di sana.
 """
     )
 
@@ -245,7 +332,7 @@ Form ini hanya contoh template.
 
     with col3:
         grade = st.selectbox("Credit Grade", ["A", "B", "C", "D", "E", "F", "G"])
-        home_ownership = st.selectbox("Home Ownership", ["RENT", "MORTGAGE", "OWN", "OTHER"])
+        home_ownership = st.selectbox("Home Ownership", ["RENT", "MORTGAGE", "OWN", "OTHER", "NONE"])
         purpose = st.selectbox(
             "Loan Purpose",
             [
@@ -259,7 +346,6 @@ Form ini hanya contoh template.
             ],
         )
 
-    # ⚠️ Penting: mapping ini HARUS kamu samakan dengan fitur real di dataset final
     input_features = {
         "loan_amnt": loan_amnt,
         "term": term,
@@ -270,7 +356,6 @@ Form ini hanya contoh template.
         "grade": grade,
         "home_ownership": home_ownership,
         "purpose": purpose,
-        # tambahkan fitur lain jika modelmu butuh
     }
 
     if st.button("🔍 Predict Risk (Single Applicant)"):
@@ -298,8 +383,6 @@ Form ini hanya contoh template.
         except Exception as e:
             st.error(
                 "Terjadi error saat melakukan prediksi.\n\n"
-                "Kemungkinan besar karena nama fitur di `input_features` "
-                "belum match dengan `features.pkl`.\n\n"
                 f"Detail error:\n{e}"
             )
 
@@ -332,7 +415,6 @@ Ini berguna untuk demo ke recruiter/teman tanpa perlu dataset 229 MB.
 
         max_rows = sample_df.shape[0]
 
-        # Slider aman untuk berbagai ukuran
         if max_rows <= 10:
             n_rows = st.slider(
                 "Berapa banyak baris sample yang mau diprediksi?",
