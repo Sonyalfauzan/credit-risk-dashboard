@@ -25,7 +25,7 @@ SAMPLE_PATH = os.path.join(ARTIFACT_DIR, "sample_applications.csv")
 
 
 # =====================================================
-# 2. LOAD ARTEFAK MODEL (CACHED)
+# 2. LOAD ARTEFAK MODEL & SAMPLE DATA
 # =====================================================
 
 @st.cache_resource
@@ -59,10 +59,13 @@ def load_artifacts():
 
 @st.cache_data
 def load_sample_data():
-    """Load sample CSV kecil untuk demo. Kalau tidak ada, return None."""
+    """Load sample CSV kecil untuk demo. Kalau tidak ada / kosong, return None."""
     if not os.path.exists(SAMPLE_PATH):
         return None
     df = pd.read_csv(SAMPLE_PATH)
+    if df.shape[0] == 0:
+        # file hanya header / kosong
+        return None
     return df
 
 
@@ -313,23 +316,39 @@ Ini berguna untuk demo ke recruiter/teman tanpa perlu dataset 229 MB.
     )
 
     sample_df = load_sample_data()
+
     if sample_df is None:
         st.warning(
-            "File `sample_applications.csv` belum ada. "
-            "Buat saja file kecil (mis. 100 baris) dari dataset finalmu dan "
-            "commit ke repo dengan nama tersebut."
+            "Sample data belum tersedia atau kosong.\n\n"
+            "- Buat file kecil (mis. 100 baris) dari dataset finalmu\n"
+            "- Simpan sebagai `sample_applications.csv` di root repo.\n"
+            "- Pastikan kolomnya sama seperti yang dipakai model."
         )
     else:
-        st.write(f"Sample data shape: {sample_df.shape[0]} rows x {sample_df.shape[1]} columns.")
+        st.write(
+            f"Sample data shape: {sample_df.shape[0]} rows x {sample_df.shape[1]} columns."
+        )
         st.dataframe(sample_df.head())
 
-        n_rows = st.slider(
-            "Berapa banyak baris sample yang mau diprediksi?",
-            min_value=10,
-            max_value=min(200, sample_df.shape[0]),
-            value=min(50, sample_df.shape[0]),
-            step=10,
-        )
+        max_rows = sample_df.shape[0]
+
+        # Slider aman untuk berbagai ukuran
+        if max_rows <= 10:
+            n_rows = st.slider(
+                "Berapa banyak baris sample yang mau diprediksi?",
+                min_value=1,
+                max_value=max_rows,
+                value=max_rows,
+                step=1,
+            )
+        else:
+            n_rows = st.slider(
+                "Berapa banyak baris sample yang mau diprediksi?",
+                min_value=10,
+                max_value=min(200, max_rows),
+                value=min(50, max_rows),
+                step=10,
+            )
 
         if st.button("🚀 Run Prediction on Sample Data"):
             try:
