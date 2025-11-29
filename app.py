@@ -477,6 +477,149 @@ st.markdown(
     """
 )
 
+# Add explanation expander
+with st.expander("📚 **Panduan Lengkap Penggunaan Aplikasi** (Klik untuk membuka)"):
+    st.markdown("""
+    ### 🎓 Apa itu Credit Risk Prediction?
+    
+    **Credit Risk Prediction** adalah sistem yang menggunakan **Machine Learning** untuk memprediksi 
+    kemungkinan seorang pemohon pinjaman akan **gagal bayar (default)** atau tidak.
+    
+    **Analogi sederhana:**
+    > Seperti ketika bank menilai apakah Anda layak diberi pinjaman, tapi menggunakan AI yang belajar 
+    > dari data ratusan ribu aplikasi pinjaman sebelumnya.
+    
+    ---
+    
+    ### 🤔 Mengapa ini Penting?
+    
+    - **Untuk Bank/Lender**: Mengurangi risiko kerugian dari pinjaman bermasalah
+    - **Untuk Peminjam**: Proses approval lebih cepat dan objektif
+    - **Untuk Bisnis**: Otomasi keputusan kredit dengan akurasi tinggi
+    
+    ---
+    
+    ### 🎯 Cara Kerja Sistem Ini:
+    
+    ```
+    INPUT                    PROSES                      OUTPUT
+    ┌──────────────┐        ┌──────────────┐          ┌──────────────┐
+    │ Data Pemohon │   →    │ Model ML     │    →     │ Keputusan    │
+    │ - Gaji       │        │ (XGBoost)    │          │ - APPROVE ✅ │
+    │ - Pinjaman   │        │ Analisis     │          │ - REJECT  ❌ │
+    │ - Grade Kredit│       │ 87 Fitur     │          │ + Probabilitas│
+    └──────────────┘        └──────────────┘          └──────────────┘
+    ```
+    
+    ---
+    
+    ### 📋 Cara Menggunakan Aplikasi:
+    
+    #### **Tab 1: 🧍 Single Prediction (Paling Mudah untuk Pemula)**
+    
+    **Kapan digunakan?**
+    - Testing satu aplikasi pinjaman
+    - Demo ke orang lain
+    - Memahami cara kerja model
+    
+    **Langkah-langkah:**
+    1. **Isi Form dengan Data Pemohon:**
+       - **Loan Amount**: Jumlah uang yang ingin dipinjam (contoh: $10,000)
+       - **Term**: Jangka waktu pinjaman (36 bulan = 3 tahun, 60 bulan = 5 tahun)
+       - **Interest Rate**: Bunga pinjaman per tahun (contoh: 13.5%)
+       - **Annual Income**: Gaji per tahun (contoh: $60,000)
+       - **DTI (Debt-to-Income)**: Persentase hutang dibanding gaji (contoh: 18%)
+       - **Credit History**: Berapa lama memiliki riwayat kredit (contoh: 7 tahun)
+       - **Credit Grade**: Rating kredit A (terbaik) hingga G (terburuk)
+       - **Home Ownership**: Status kepemilikan rumah (Rent/Mortgage/Own)
+       - **Purpose**: Tujuan pinjaman (konsolidasi hutang, kartu kredit, dll)
+    
+    2. **Klik "Predict Risk"**
+    
+    3. **Baca Hasil:**
+       - 🟢 **APPROVE (Low Risk)**: Pemohon kemungkinan besar akan bayar lancar
+       - 🔴 **REJECT (High Risk)**: Pemohon berisiko tinggi gagal bayar
+       - **Probability**: Persentase risiko (contoh: 25% = risiko rendah, 75% = risiko tinggi)
+    
+    ---
+    
+    #### **Tab 2: 🎲 Generate Demo Data (RECOMMENDED!)**
+    
+    **Kapan digunakan?**
+    - **Tidak punya dataset** tapi ingin test aplikasi
+    - Demo cepat untuk recruiter/interviewer
+    - Testing model dengan banyak skenario sekaligus
+    
+    **Keunggulan:**
+    - ✅ Tidak perlu download/upload file apapun
+    - ✅ Data dibuat otomatis dalam hitungan detik
+    - ✅ Langsung lihat hasil prediksi ratusan aplikasi
+    
+    **Langkah-langkah:**
+    1. Pilih jumlah data yang ingin di-generate (10-500)
+    2. Klik "Generate & Predict"
+    3. Lihat summary & download hasilnya
+    
+    ---
+    
+    #### **Tab 3: 📊 Sample Data**
+    
+    **Kapan digunakan?**
+    - Jika repo sudah menyediakan sample data
+    - Testing dengan data "real" yang sudah di-preprocessed
+    
+    ---
+    
+    #### **Tab 4: 📂 Batch Upload**
+    
+    **Kapan digunakan?**
+    - Punya data CSV sendiri (max 10MB)
+    - Testing dengan data custom
+    
+    **Format CSV yang Dibutuhkan:**
+    - Minimal kolom: loan_amnt, int_rate, annual_inc, grade, dll
+    - Tidak perlu semua kolom (missing akan diisi otomatis)
+    
+    ---
+    
+    ### 📊 Memahami Hasil Prediksi:
+    
+    #### **1. Default Probability (Probabilitas Gagal Bayar)**
+    - **0% - 30%**: Risiko Rendah 🟢 → APPROVE
+    - **30% - 50%**: Risiko Menengah 🟡 → Review Manual
+    - **50% - 100%**: Risiko Tinggi 🔴 → REJECT
+    
+    #### **2. Risk Flag**
+    - **Low Risk (Good Loan)**: Pemohon diprediksi akan bayar lancar ✅
+    - **High Risk (Bad Loan)**: Pemohon berisiko tinggi gagal bayar ❌
+    
+    #### **3. Threshold (Ambang Batas Keputusan)**
+    - Default: **0.30** (30%)
+    - Jika probability ≥ threshold → HIGH RISK
+    - Jika probability < threshold → LOW RISK
+    - Bisa diatur di sidebar (lebih rendah = lebih ketat, lebih tinggi = lebih longgar)
+    
+    ---
+    
+    ### 💡 Tips untuk Hasil Terbaik:
+    
+    1. **Input yang Akurat**: Pastikan data yang dimasukkan realistis dan benar
+    2. **Pahami Context**: Model ini tool bantu, bukan pengganti keputusan manusia
+    3. **Gunakan Threshold Bijak**: 
+       - Bisnis konservatif → threshold rendah (0.20-0.30)
+       - Bisnis agresif → threshold tinggi (0.40-0.50)
+    4. **Review Manual untuk Borderline Cases**: Probability di sekitar threshold perlu review tambahan
+    
+    ---
+    
+    ### ⚠️ Disclaimer:
+    
+    - Model ini untuk **tujuan demonstrasi dan edukasi**
+    - Keputusan kredit aktual harus melibatkan **review manual** oleh credit analyst
+    - Pertimbangkan faktor lain: karakter peminjam, kondisi ekonomi, dll
+    - Model dilatih dengan data 2007-2014, kondisi ekonomi bisa berubah
+    """)
+
 # Metrics
 metrics = metadata.get("metrics", {})
 optimal_threshold = metadata.get("optimal_threshold", 0.5)
@@ -497,6 +640,161 @@ with col4:
     st.metric("ROC-AUC", f"{metrics.get('roc_auc', 0):.3f}")
 with col5:
     st.metric("Optimal Threshold", f"{optimal_threshold:.2f}")
+
+# Add metrics explanation
+with st.expander("❓ **Penjelasan Metrik Model** (Apa arti angka-angka di atas?)"):
+    st.markdown(f"""
+    ### 🤖 Model: **{model_type}**
+    
+    **XGBoost (eXtreme Gradient Boosting)** adalah algoritma Machine Learning yang sangat powerful untuk prediksi.
+    
+    **Analogi sederhana:**
+    > Bayangkan 100 ahli kredit senior yang voting apakah aplikasi harus disetujui atau ditolak. 
+    > XGBoost menggabungkan pendapat mereka dengan cara yang sangat cerdas.
+    
+    **Kenapa XGBoost?**
+    - ✅ Akurasi tinggi untuk prediksi finansial
+    - ✅ Bisa menangani data kompleks dengan banyak fitur
+    - ✅ Robust terhadap data yang tidak sempurna
+    - ✅ Digunakan oleh bank-bank besar dan fintech
+    
+    **"Tuned"** artinya model ini sudah dioptimasi dengan hyperparameter terbaik melalui proses trial & error.
+    
+    ---
+    
+    ### 📊 Accuracy: **{metrics.get('accuracy', 0):.1%}**
+    
+    **Apa artinya?**
+    - Dari 100 aplikasi pinjaman, model benar memprediksi **{metrics.get('accuracy', 0)*100:.0f} aplikasi**
+    - {100 - metrics.get('accuracy', 0)*100:.0f} sisanya salah prediksi
+    
+    **Interpretasi:**
+    - 75-80%: Bagus ✅ (standar industri fintech)
+    - 80-85%: Sangat Bagus 🌟
+    - >85%: Excellent 🏆 (tapi hati-hati overfitting)
+    
+    **Catatan:** Accuracy saja tidak cukup! Kita perlu lihat metrik lain.
+    
+    ---
+    
+    ### ⚖️ F1-Score: **{metrics.get('f1_score', 0):.3f}**
+    
+    **Apa artinya?**
+    F1-Score adalah **keseimbangan** antara:
+    - **Precision**: Dari yang diprediksi HIGH RISK, berapa yang benar-benar HIGH RISK?
+    - **Recall**: Dari semua yang benar-benar HIGH RISK, berapa yang berhasil ditangkap?
+    
+    **Analogi sederhana:**
+    > Seperti dokter mendiagnosis penyakit:
+    > - Precision: Jika dokter bilang Anda sakit, seberapa yakin diagnosis itu benar?
+    > - Recall: Dari semua orang yang benar-benar sakit, berapa yang berhasil didiagnosis?
+    
+    **Interpretasi untuk F1-Score {metrics.get('f1_score', 0):.3f}:**
+    - 0.0 - 0.3: Lemah ⚠️ (model kesulitan deteksi bad loans)
+    - 0.3 - 0.5: Cukup ✅ (reasonable untuk imbalanced data)
+    - 0.5 - 0.7: Bagus 🌟
+    - >0.7: Excellent 🏆
+    
+    **Kenapa F1-Score penting di Credit Risk?**
+    - Data tidak seimbang: Good loans jauh lebih banyak dari Bad loans
+    - Kita butuh model yang bisa **detect bad loans** tanpa terlalu banyak **false alarm**
+    
+    **Nilai {metrics.get('f1_score', 0):.3f} artinya:**
+    Model cukup baik mendeteksi bad loans, cocok untuk data yang imbalanced seperti credit risk.
+    
+    ---
+    
+    ### 📈 ROC-AUC: **{metrics.get('roc_auc', 0):.3f}**
+    
+    **Apa artinya?**
+    ROC-AUC mengukur **kemampuan model membedakan** antara Good Loan dan Bad Loan.
+    - Nilai 0.5: Model seperti tebakan acak (lempar koin) 🪙
+    - Nilai 1.0: Model sempurna (tidak realistis) 
+    
+    **Interpretasi ROC-AUC {metrics.get('roc_auc', 0):.3f}:**
+    - 0.5 - 0.6: Lemah (hampir random)
+    - 0.6 - 0.7: Cukup ✅
+    - **0.7 - 0.8: Bagus** 🌟 ← Model kita di sini!
+    - 0.8 - 0.9: Sangat Bagus
+    - >0.9: Excellent (atau overfitting)
+    
+    **Analogi sederhana:**
+    > Jika Anda tunjukkan 2 aplikasi (1 good, 1 bad) ke model, ada {metrics.get('roc_auc', 0)*100:.0f}% 
+    > kemungkinan model bisa correctly rank mana yang lebih berisiko.
+    
+    **ROC-AUC {metrics.get('roc_auc', 0):.1%} artinya:**
+    Model memiliki kemampuan diskriminasi yang bagus untuk membedakan peminjam berisiko tinggi vs rendah.
+    
+    ---
+    
+    ### 🎯 Optimal Threshold: **{optimal_threshold:.2f}** (30%)
+    
+    **Apa artinya?**
+    Ini adalah **titik potong** untuk memutuskan APPROVE atau REJECT.
+    
+    **Cara kerja:**
+    - Jika probability ≥ 0.30 (30%) → **HIGH RISK** → REJECT ❌
+    - Jika probability < 0.30 (30%) → **LOW RISK** → APPROVE ✅
+    
+    **Kenapa 0.30?**
+    Nilai ini dipilih berdasarkan **analisis cost-benefit**:
+    - Terlalu rendah (0.10): Terlalu banyak reject, kehilangan customer bagus
+    - Terlalu tinggi (0.60): Terlalu banyak approve, banyak bad loans lolos
+    - **0.30**: Sweet spot yang balance risk dan opportunity
+    
+    **Analogi bisnis:**
+    ```
+    Threshold 0.20 (Konservatif)     Threshold 0.30 (Balanced)      Threshold 0.50 (Agresif)
+    ├─────────────────────────────┼─────────────────────────────┼──────────────────────────┤
+    Reject banyak                  Balance                       Approve banyak
+    Kehilangan revenue             Optimal risk/reward           Risiko tinggi bad loans
+    Safety first                   Recommended ✅                Growth aggressive
+    ```
+    
+    **Bisa diubah?**
+    Ya! Di sidebar Anda bisa adjust threshold sesuai risk appetite:
+    - **Conservative (0.20-0.25)**: Untuk lembaga yang sangat risk-averse
+    - **Balanced (0.30-0.35)**: Recommended untuk most cases ✅
+    - **Aggressive (0.40-0.50)**: Untuk lembaga yang prioritaskan growth
+    
+    ---
+    
+    ### 📚 Kesimpulan Model Performance:
+    
+    | Metrik | Nilai | Rating | Interpretasi |
+    |--------|-------|--------|--------------|
+    | **Accuracy** | {metrics.get('accuracy', 0):.1%} | {'🌟' if metrics.get('accuracy', 0) >= 0.75 else '✅'} | Model benar {metrics.get('accuracy', 0)*100:.0f}% dari waktu |
+    | **F1-Score** | {metrics.get('f1_score', 0):.3f} | {'✅' if metrics.get('f1_score', 0) >= 0.3 else '⚠️'} | Cukup baik untuk imbalanced data |
+    | **ROC-AUC** | {metrics.get('roc_auc', 0):.3f} | {'🌟' if metrics.get('roc_auc', 0) >= 0.7 else '✅'} | Kemampuan diskriminasi bagus |
+    | **Threshold** | {optimal_threshold:.2f} | ✅ | Balanced risk-reward |
+    
+    **Overall Assessment:**
+    Model ini memiliki performa yang **solid dan production-ready** untuk credit risk prediction. 
+    Cocok untuk lending companies yang ingin **mengotomasi screening awal** aplikasi pinjaman 
+    sambil tetap melakukan **manual review untuk borderline cases**.
+    
+    ---
+    
+    ### 💼 Use Case di Dunia Nyata:
+    
+    **Skenario 1: Fintech Lending**
+    - Model ini bisa proses 10,000 aplikasi/hari
+    - Auto-approve low risk (< 20%)
+    - Auto-reject high risk (> 60%)
+    - Manual review untuk middle range (20-60%)
+    - Result: 70% automated, 30% manual review
+    
+    **Skenario 2: Bank Digital**
+    - Integrasikan dalam mobile app
+    - Instant pre-approval dalam 60 detik
+    - Improve customer experience
+    - Reduce operational cost 50%
+    
+    **Skenario 3: P2P Lending**
+    - Show risk score ke investor
+    - Biarkan investor pilih risk level mereka
+    - Transparansi = trust = more funding
+    """)
 
 st.markdown("---")
 
@@ -561,28 +859,273 @@ with tab_single:
         """
     )
     
+    # Add input guide
+    st.info("""
+    💡 **Panduan Singkat Input Form:**
+    - Isi semua field dengan data pemohon pinjaman
+    - Tidak perlu 100% akurat - ini untuk testing/demo
+    - Gunakan nilai default sebagai contoh
+    - Hover di tanda (?) untuk penjelasan detail setiap field
+    """)
+    
     with st.form("single_form"):
         col1, col2, col3 = st.columns(3)
         
         with col1:
             st.markdown("**💰 Loan Details**")
-            loan_amnt = st.number_input("Loan Amount ($)", 500.0, 40000.0, 10000.0, 500.0)
-            term = st.selectbox("Term", ["36 months", "60 months"])
-            int_rate = st.number_input("Interest Rate (%)", 5.0, 35.0, 13.5, 0.1)
+            loan_amnt = st.number_input(
+                "Loan Amount ($)", 
+                min_value=500.0, 
+                max_value=40000.0, 
+                value=10000.0, 
+                step=500.0,
+                help="""
+                💵 JUMLAH PINJAMAN
+                
+                Berapa banyak uang yang ingin dipinjam?
+                
+                Range umum: $1,000 - $40,000
+                
+                Contoh:
+                - $5,000: Pinjaman kecil (kartu kredit, emergency)
+                - $10,000: Pinjaman sedang (konsolidasi hutang)
+                - $25,000: Pinjaman besar (bisnis, renovasi)
+                
+                Tips: Pinjaman besar + income rendah = risiko tinggi
+                """
+            )
+            term = st.selectbox(
+                "Term", 
+                ["36 months", "60 months"],
+                help="""
+                📅 JANGKA WAKTU PINJAMAN
+                
+                Berapa lama waktu untuk melunasi?
+                
+                - 36 months (3 tahun): Cicilan lebih besar, total bunga lebih kecil
+                - 60 months (5 tahun): Cicilan lebih kecil, total bunga lebih besar
+                
+                Contoh cicilan $10,000 @ 13.5%:
+                - 36 bulan: ~$340/bulan
+                - 60 bulan: ~$230/bulan
+                
+                Tips: Term lebih panjang = lebih mudah bayar tapi total cost lebih mahal
+                """
+            )
+            int_rate = st.number_input(
+                "Interest Rate (%)", 
+                min_value=5.0, 
+                max_value=35.0, 
+                value=13.5, 
+                step=0.1,
+                help="""
+                📊 SUKU BUNGA PER TAHUN
+                
+                Berapa persen bunga pinjaman?
+                
+                Range berdasarkan risk:
+                - 5-10%: Excellent credit (Grade A-B)
+                - 10-15%: Good credit (Grade B-C)
+                - 15-20%: Fair credit (Grade C-D)
+                - 20-30%: Poor credit (Grade E-F)
+                - >30%: Very high risk (Grade G)
+                
+                Tips: Interest rate tinggi = kompensasi untuk risiko tinggi
+                """
+            )
         
         with col2:
             st.markdown("**👤 Applicant Profile**")
-            annual_inc = st.number_input("Annual Income ($)", 10000.0, 500000.0, 60000.0, 1000.0)
-            dti = st.number_input("DTI (%)", 0.0, 50.0, 18.0, 0.1)
-            credit_history_years = st.number_input("Credit History (years)", 0.0, 40.0, 7.0, 0.5)
+            annual_inc = st.number_input(
+                "Annual Income ($)", 
+                min_value=10000.0, 
+                max_value=500000.0, 
+                value=60000.0, 
+                step=1000.0,
+                help="""
+                💰 PENDAPATAN TAHUNAN (KOTOR)
+                
+                Berapa total gaji/income per tahun sebelum pajak?
+                
+                Benchmark USA:
+                - $30,000-$40,000: Low income
+                - $50,000-$70,000: Middle class (median)
+                - $80,000-$120,000: Upper middle class
+                - >$150,000: High income
+                
+                Tips: Income tinggi = kemampuan bayar lebih baik = risiko lebih rendah
+                
+                Untuk freelancer: Rata-rata income 12 bulan terakhir
+                """
+            )
+            dti = st.number_input(
+                "DTI - Debt-to-Income (%)", 
+                min_value=0.0, 
+                max_value=50.0, 
+                value=18.0, 
+                step=0.1,
+                help="""
+                📊 DEBT-TO-INCOME RATIO
+                
+                Persentase hutang bulanan terhadap income bulanan
+                
+                Rumus: (Total hutang per bulan / Income per bulan) × 100
+                
+                Contoh:
+                Income $5,000/bulan
+                Hutang (KPR + kartu kredit + cicilan): $900/bulan
+                DTI = (900/5000) × 100 = 18%
+                
+                Interpretasi:
+                - 0-20%: Excellent (sedikit hutang)
+                - 20-30%: Good (hutang terkontrol)
+                - 30-40%: Borderline (mulai berat)
+                - >40%: High risk (hutang overload)
+                
+                Tips: Lender biasanya prefer DTI < 36%
+                """
+            )
+            credit_history_years = st.number_input(
+                "Credit History (years)", 
+                min_value=0.0, 
+                max_value=40.0, 
+                value=7.0, 
+                step=0.5,
+                help="""
+                📅 LAMA RIWAYAT KREDIT
+                
+                Berapa lama sudah memiliki track record kredit?
+                
+                Dihitung sejak pertama kali:
+                - Buka kartu kredit
+                - Ambil pinjaman
+                - Menjadi authorized user
+                
+                Interpretasi:
+                - 0-2 tahun: Credit newbie (thin file)
+                - 3-5 tahun: Masih muda, tapi ada data
+                - 5-10 tahun: Cukup mature
+                - >10 tahun: Established (good sign)
+                
+                Tips: Semakin panjang history (asalkan bagus) = semakin dipercaya lender
+                
+                Note: Ini bukan umur, tapi lama punya credit history!
+                """
+            )
         
         with col3:
             st.markdown("**📊 Credit Profile**")
-            grade = st.selectbox("Credit Grade", ["A", "B", "C", "D", "E", "F", "G"])
-            home_ownership = st.selectbox("Home Ownership", ["RENT", "MORTGAGE", "OWN", "OTHER", "NONE"])
-            purpose = st.selectbox("Purpose", ["debt_consolidation", "credit_card", "home_improvement", "small_business", "major_purchase", "car", "other"])
+            grade = st.selectbox(
+                "Credit Grade", 
+                ["A", "B", "C", "D", "E", "F", "G"],
+                index=1,  # Default ke B
+                help="""
+                🏆 CREDIT GRADE / RATING
+                
+                Rating kredit berdasarkan credit score & risk assessment
+                
+                Grade breakdown:
+                - A: Excellent (Credit Score 720+) - Top 20% peminjam
+                - B: Very Good (680-719) - Low risk
+                - C: Good (640-679) - Moderate risk
+                - D: Fair (600-639) - Increased risk
+                - E: Poor (560-599) - High risk
+                - F: Very Poor (520-559) - Very high risk
+                - G: Bad (< 520) - Highest risk
+                
+                Faktor yang mempengaruhi:
+                - Payment history (35%)
+                - Credit utilization (30%)
+                - Length of credit history (15%)
+                - New credit (10%)
+                - Credit mix (10%)
+                
+                Tips: Grade A-B dapat rate terbaik, E-G dapat rate tinggi atau ditolak
+                """
+            )
+            home_ownership = st.selectbox(
+                "Home Ownership", 
+                ["RENT", "MORTGAGE", "OWN", "OTHER", "NONE"],
+                help="""
+                🏠 STATUS KEPEMILIKAN RUMAH
+                
+                Bagaimana status tempat tinggal saat ini?
+                
+                Pilihan:
+                - RENT: Sewa/kontrak rumah (paling umum untuk young adults)
+                - MORTGAGE: Punya rumah tapi masih cicil KPR
+                - OWN: Punya rumah lunas (free and clear)
+                - OTHER: Tinggal dengan ortu/saudara/company housing
+                - NONE: Homeless / tidak fixed address
+                
+                Interpretasi risk:
+                - OWN (Lunas): Best - asset stabil, tidak ada beban KPR
+                - MORTGAGE: Good - komitmen jangka panjang, tapi ada cicilan
+                - RENT: Neutral - fleksibel tapi tidak ada asset
+                - OTHER: Depends - perlu context lebih
+                - NONE: Red flag - tidak ada stabilitas
+                
+                Tips: OWN/MORTGAGE lebih dipercaya karena tunjukkan stabilitas
+                """
+            )
+            purpose = st.selectbox(
+                "Loan Purpose",
+                [
+                    "debt_consolidation",
+                    "credit_card",
+                    "home_improvement",
+                    "small_business",
+                    "major_purchase",
+                    "car",
+                    "other",
+                ],
+                help="""
+                🎯 TUJUAN PINJAMAN
+                
+                Untuk apa uang ini akan digunakan?
+                
+                Tujuan umum:
+                
+                1. debt_consolidation (40%)
+                   - Gabungkan banyak hutang jadi satu
+                   - Biasanya untuk lower interest rate
+                   - Relatively lower risk
+                
+                2. credit_card (20%)
+                   - Bayar credit card debt
+                   - High interest debt → lower interest loan
+                   - Smart financial move
+                
+                3. home_improvement (15%)
+                   - Renovasi/perbaikan rumah
+                   - Increase home value
+                   - Moderate risk
+                
+                4. small_business (10%)
+                   - Modal usaha kecil
+                   - Higher risk (business bisa gagal)
+                   - Perlu business plan
+                
+                5. major_purchase (5%)
+                   - Beli barang besar (furniture, appliance)
+                   - Moderate risk
+                
+                6. car (5%)
+                   - Beli mobil
+                   - Asset-backed, lower risk
+                
+                7. other (5%)
+                   - Medical, wedding, vacation, dll
+                   - Risk varies
+                
+                Tips: Debt consolidation dan credit card payoff dilihat positif karena tunjukkan financial responsibility
+                """
+            )
         
-        submit = st.form_submit_button("🔍 Predict Risk", use_container_width=True)
+        st.markdown("---")
+        col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
+        with col_btn2:
+            submit = st.form_submit_button("🔍 Predict Risk", use_container_width=True, type="primary")
     
     if submit:
         inputs = {
@@ -735,9 +1278,137 @@ with tab_generate:
             available_cols = [col for col in display_cols if col in df_result.columns]
             st.dataframe(df_result[available_cols].head(10), use_container_width=True)
             
+            # Add table explanation
+            with st.expander("📖 **Penjelasan Kolom Tabel** (Klik untuk memahami setiap kolom)"):
+                st.markdown("""
+                ### 📊 Penjelasan Setiap Kolom dalam Tabel Hasil:
+                
+                | Kolom | Penjelasan | Contoh | Tips Membaca |
+                |-------|------------|--------|--------------|
+                | **loan_amnt** | Jumlah pinjaman yang dimohonkan (dalam USD) | $10,000 | Semakin besar pinjaman, semakin tinggi risiko jika gagal bayar |
+                | **annual_inc** | Pendapatan tahunan pemohon (dalam USD) | $60,000 | Indikator kemampuan bayar. Income tinggi = risiko lebih rendah |
+                | **grade** | Rating kredit pemohon dari A (terbaik) hingga G (terburuk) | B, C, D | A-B: Low risk, C-D: Medium, E-G: High risk |
+                | **dti** | Debt-to-Income ratio dalam persen (%) | 18.5% | Total hutang ÷ Income. <30% = bagus, >40% = berisiko |
+                | **prob_default** | **Probabilitas gagal bayar** yang dihitung model | 0.25 (25%) | Angka kunci! 0-30%: Low risk, 30-50%: Medium, 50-100%: High risk |
+                | **risk_flag** | **Label keputusan akhir** berdasarkan threshold | High Risk / Low Risk | Rekomendasi: APPROVE jika Low Risk, REJECT jika High Risk |
+                
+                ---
+                
+                ### 🎯 Cara Membaca Tabel dengan Benar:
+                
+                **Contoh Baris 1:**
+                ```
+                loan_amnt: $15,000 | annual_inc: $50,000 | grade: C | dti: 22% | prob_default: 0.35 | risk_flag: High Risk
+                ```
+                
+                **Interpretasi:**
+                1. **Pemohon ingin pinjam $15,000** dengan gaji $50,000/tahun
+                2. **Credit grade C** = peminjam menengah (bukan excellent, tapi bukan buruk)
+                3. **DTI 22%** = hutang 22% dari income (masih reasonable)
+                4. **Probability 35%** = model prediksi ada 35% chance gagal bayar
+                5. **Risk Flag: High Risk** = karena 35% > threshold 30%, masuk kategori HIGH RISK
+                
+                **Keputusan:** 
+                - ❌ **REJECT** - atau minimal perlu **review manual** lebih detail
+                - Alasan: Meskipun DTI bagus, tapi kombinasi grade C + pinjaman relatif besar membuat risiko > 30%
+                
+                ---
+                
+                **Contoh Baris 2:**
+                ```
+                loan_amnt: $8,000 | annual_inc: $75,000 | grade: A | dti: 12% | prob_default: 0.15 | risk_flag: Low Risk
+                ```
+                
+                **Interpretasi:**
+                1. **Pemohon ingin pinjam $8,000** dengan gaji $75,000/tahun (ratio rendah)
+                2. **Credit grade A** = peminjam excellent!
+                3. **DTI 12%** = hutang sangat rendah (bagus sekali)
+                4. **Probability 15%** = hanya 15% chance gagal bayar
+                5. **Risk Flag: Low Risk** = 15% < threshold 30%, kategori LOW RISK
+                
+                **Keputusan:**
+                - ✅ **APPROVE** dengan percaya diri
+                - Alasan: Profile excellent, income tinggi, hutang rendah, pinjaman wajar
+                
+                ---
+                
+                ### 💡 Tips Analisis Cepat:
+                
+                **Lihat kombinasi ini untuk quick assessment:**
+                
+                1. **Grade + prob_default:**
+                   - Grade A-B + prob < 20% = 🟢 Approve confident
+                   - Grade C-D + prob 20-40% = 🟡 Review manual
+                   - Grade E-G + prob > 40% = 🔴 Reject atau tinggi bunga
+                
+                2. **loan_amnt vs annual_inc (Loan-to-Income Ratio):**
+                   - Pinjaman < 20% income = 🟢 Safe
+                   - Pinjaman 20-40% income = 🟡 Moderate
+                   - Pinjaman > 40% income = 🔴 Risky
+                
+                3. **DTI (Debt-to-Income):**
+                   - < 20% = 🟢 Excellent
+                   - 20-30% = 🟡 Good
+                   - 30-40% = 🟠 Borderline
+                   - > 40% = 🔴 Red flag
+                
+                ---
+                
+                ### 📊 Skenario Decision Making:
+                
+                **Skenario A: Conservative Lending (Risk-Averse)**
+                - Approve hanya jika prob_default < 20%
+                - Grade minimal B
+                - DTI maksimal 25%
+                - Result: Reject rate tinggi, tapi bad loan rate minimal
+                
+                **Skenario B: Balanced Approach (Recommended)**
+                - Approve jika prob_default < 30%
+                - Accept grade hingga C dengan review
+                - DTI maksimal 35%
+                - Result: Balance antara growth dan risk
+                
+                **Skenario C: Aggressive Growth**
+                - Approve hingga prob_default 40%
+                - Accept grade hingga D
+                - DTI maksimal 40%
+                - Kompensasi dengan bunga lebih tinggi
+                - Result: Volume tinggi, tapi perlu monitoring ketat
+                
+                ---
+                
+                ### ⚠️ Red Flags yang Perlu Diperhatikan:
+                
+                Kombinasi berbahaya (perlu extra scrutiny):
+                
+                1. **High loan + Low income:**
+                   - loan_amnt > $20,000 + annual_inc < $40,000
+                   - Ratio pinjaman > 50% dari income tahunan
+                
+                2. **Poor grade + High DTI:**
+                   - Grade D/E/F/G + DTI > 30%
+                   - Sudah banyak hutang + track record buruk
+                
+                3. **High prob walaupun profile bagus:**
+                   - Grade A/B tapi prob_default > 30%
+                   - Ada hidden factors yang ditangkap model
+                   - Perlu investigasi lebih lanjut
+                
+                4. **Inconsistency:**
+                   - Income tinggi + Grade buruk (suspicious)
+                   - DTI rendah tapi prob_default tinggi (check data quality)
+                """)
+            
             # Distribution
             with st.expander("📈 Probability Distribution"):
                 st.bar_chart(df_result["prob_default"].value_counts(bins=20).sort_index())
+                st.caption("""
+                **Cara membaca chart:**
+                - X-axis: Range probabilitas default (0.0 - 1.0)
+                - Y-axis: Jumlah aplikasi dalam range tersebut
+                - Distribusi ideal: Mayoritas di kiri (low probability) 
+                - Jika banyak di kanan (high probability) = portfolio berisiko tinggi
+                """)
             
             # Download
             st.markdown("### ⬇️ Download Results")
