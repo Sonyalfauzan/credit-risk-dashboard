@@ -65,20 +65,25 @@ def generate_demo_data(n_samples: int = 100) -> pd.DataFrame:
     np.random.seed(42)
     
     grades = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
-    home_ownerships = ['RENT', 'MORTGAGE', 'OWN', 'OTHER']
+    home_ownerships = ['RENT', 'MORTGAGE', 'OWN', 'OTHER', 'NONE']
     purposes = ['debt_consolidation', 'credit_card', 'home_improvement', 'small_business']
+    
+    # Generate random home ownership for each sample
+    random_home_ownership = np.random.choice(home_ownerships, n_samples)
     
     data = {
         'loan_amnt': np.random.uniform(1000, 35000, n_samples),
         'funded_amnt': np.random.uniform(1000, 35000, n_samples),
         'funded_amnt_inv': np.random.uniform(1000, 35000, n_samples),
-        'term_months': np.random.choice([36, 60], n_samples),
+        'term_months': np.random.choice([36, 60], n_samples).astype(float),
         'int_rate': np.random.uniform(5, 25, n_samples),
         'installment': np.random.uniform(30, 1200, n_samples),
         'grade': np.random.choice(grades, n_samples),
         'annual_inc': np.random.uniform(20000, 150000, n_samples),
         'dti': np.random.uniform(0, 35, n_samples),
         'credit_history_years': np.random.uniform(0, 30, n_samples),
+        'home_ownership': random_home_ownership,
+        'purpose': np.random.choice(purposes, n_samples)
     }
     
     df = pd.DataFrame(data)
@@ -88,18 +93,27 @@ def generate_demo_data(n_samples: int = 100) -> pd.DataFrame:
     df['installment_to_income_ratio'] = df['installment'] / df['annual_inc']
     df['revol_bal_to_income_ratio'] = np.random.uniform(0, 0.5, n_samples)
     
-    # Add one-hot encoded columns
+    # Add one-hot encoded columns for grade
     for g in FEATURE_MAPPINGS['categorical']['grade']:
-        df[f'grade_{g}'] = (df['grade'] == g).astype(float)
+        df[f'grade_{g}'] = np.where(df['grade'] == g, 1.0, 0.0)
     
+    # Add one-hot encoded columns for home_ownership
     for h in FEATURE_MAPPINGS['categorical']['home_ownership']:
-        home = np.random.choice(home_ownerships)
-        df[f'home_ownership_{h}'] = (home == h).astype(float)
+        df[f'home_ownership_{h}'] = np.where(df['home_ownership'] == h, 1.0, 0.0)
     
     # Add other potentially required columns with defaults
-    df['Unnamed: 0'] = range(n_samples)
-    df['home_ownership'] = np.random.choice(home_ownerships, n_samples)
-    df['purpose'] = np.random.choice(purposes, n_samples)
+    df['Unnamed: 0'] = np.arange(n_samples).astype(float)
+    
+    # Add additional common features that might be needed (with safe defaults)
+    df['revol_bal'] = np.random.uniform(0, 50000, n_samples)
+    df['revol_util'] = np.random.uniform(0, 100, n_samples)
+    df['total_acc'] = np.random.uniform(5, 50, n_samples)
+    df['open_acc'] = np.random.uniform(1, 30, n_samples)
+    df['pub_rec'] = np.random.choice([0, 1, 2], n_samples, p=[0.8, 0.15, 0.05]).astype(float)
+    df['delinq_2yrs'] = np.random.choice([0, 1, 2], n_samples, p=[0.85, 0.12, 0.03]).astype(float)
+    df['inq_last_6mths'] = np.random.choice([0, 1, 2, 3], n_samples, p=[0.6, 0.25, 0.1, 0.05]).astype(float)
+    
+    logger.info(f"Generated {n_samples} synthetic samples with {df.shape[1]} features")
     
     return df
 
